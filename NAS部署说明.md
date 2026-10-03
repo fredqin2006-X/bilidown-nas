@@ -1,6 +1,6 @@
 # BiliDown NAS 部署说明
 
-镜像版本：`bilidown-nas:2.1.1-nas.3`，架构 `linux/amd64`。上游基线：iuroc/bilidown 提交 `6b196f57473a36ccd7c77104e5aa01ca046b7836`。
+镜像版本：`bilidown-nas:2.1.1-nas.4`，架构 `linux/amd64`。上游基线：iuroc/bilidown 提交 `6b196f57473a36ccd7c77104e5aa01ca046b7836`。
 
 ## 配置
 
@@ -25,7 +25,7 @@
 从 [Releases](https://github.com/fredqin2006-X/bilidown-nas/releases) 下载镜像备份，放到项目目录。在 NAS SSH 中执行，必要时添加 `sudo`：
 
 ```sh
-docker load -i bilidown-nas-2.1.1-nas.3.tar.gz
+docker load -i bilidown-nas-2.1.1-nas.4.tar.gz
 docker compose up -d --no-build
 docker compose ps
 docker compose logs --tail=100 bilidown
@@ -50,7 +50,7 @@ Compose 默认使用清华 Debian 镜像加速并保留 Debian 签名校验。�
 docker build --network=host \
   --build-arg DEBIAN_MIRROR=http://mirrors.tuna.tsinghua.edu.cn/debian \
   --build-arg DEBIAN_SECURITY_MIRROR=http://mirrors.tuna.tsinghua.edu.cn/debian-security \
-  -f Dockerfile.prebuilt -t bilidown-nas:2.1.1-nas.3 .
+  -f Dockerfile.prebuilt -t bilidown-nas:2.1.1-nas.4 .
 docker compose up -d --no-build
 ```
 
@@ -104,6 +104,8 @@ cd server
 go test -tags headless ./... -run 'TestHeadlessDatabaseStartup|TestResolveDownloadFile|TestServer|TestTaskDownload'
 go vet -tags headless ./...
 ```
+
+nas.4 增加分享文字提取：直接粘贴 B 站复制的“标题 + 链接”即可。支持 b23 短链、手机端链接、换行和末尾标点，保留链接参数及原有 BV/EP/SS 输入。前端测试：在 `client` 目录执行 `pnpm test`。
 
 ## 已验证范围（2026-10-03）
 

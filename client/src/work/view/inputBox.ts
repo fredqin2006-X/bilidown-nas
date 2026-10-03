@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import { checkURL, handleB23, handleSeasonsArchivesList, start } from '../mixin'
 import { WorkRoute } from '..'
 import { VanComponent } from '../../mixin'
+import { normalizeShareInput } from '../shareInput.js'
 
 const { button, div, input, label, span } = van.tags
 
@@ -17,14 +18,27 @@ class InputBoxComp implements VanComponent {
                 div({ class: () => `form-floating flex-fill` },
                     input({
                         class: () => `form-control border-3 ${workRoute.urlInvalidClass.val}`,
-                        placeholder: '请输入待解析的视频链接',
+                        placeholder: '粘贴视频链接或 B 站分享文字',
                         value: workRoute.urlValue,
                         oninput: event => workRoute.urlValue.val = event.target.value,
+                        onpaste: event => {
+                            const text = event.clipboardData?.getData('text')
+                            if (!text) return
+                            const field = event.target as HTMLInputElement
+                            const combined = field.value.slice(0, field.selectionStart ?? 0) + text
+                                + field.value.slice(field.selectionEnd ?? field.value.length)
+                            const value = normalizeShareInput(combined)
+                            if (value === combined.trim()) return
+                            event.preventDefault()
+                            field.value = value
+                            workRoute.urlValue.val = value
+                            workRoute.urlInvalid.val = false
+                        },
                         onkeyup: event => {
                             if (event.key === 'Enter') document.getElementById(this.btnID)?.click()
                         }
                     }),
-                    label({ class: 'w-100' }, '请输入视频链接或 BV/EP/SS 号')
+                    label({ class: 'w-100' }, '链接、分享文字或 BV/EP/SS 号')
                 ),
                 ParseButton(this, false, this.btnID),
                 ParseButton(this, true)
@@ -42,7 +56,7 @@ const ParseButton = (parent: InputBoxComp, large: boolean, id: string = '') => {
         async onclick() {
             try {
                 workRoute.btnLoading.val = true
-                workRoute.urlValue.val = workRoute.urlValue.val.trim()
+                workRoute.urlValue.val = normalizeShareInput(workRoute.urlValue.val)
                 try {
                     const handleB23Result = await handleB23(workRoute.urlValue.val)
                     if (handleB23Result) workRoute.urlValue.val = handleB23Result

@@ -1,6 +1,6 @@
 services:
   bilidown:
-    image: bilidown-nas:2.1.1-nas.3
+    image: bilidown-nas:2.1.1-nas.4
     build:
       context: .
       network: host

@@ -10,6 +10,7 @@
 
 ## 功能
 
+- 自动提取 B 站复制的分享文字中的链接，支持标题、换行、短链和手机端链接。
 - 扫码登录，支持普通视频、番剧/影视、合集和收藏夹解析。
 - 保留上游清晰度、音频与批量下载能力；可用格式受 B 站账号权限和视频本身限制。
 - 后台下载和 FFmpeg 合并，关闭浏览器后任务继续执行。
@@ -34,10 +35,10 @@
 
 2. 编辑 `.env`：填写 NAS 的内网 IP、运行用户的 UID/GID、数据库目录和下载目录。使用 `id` 查询 UID/GID，并确保该用户可读写两个挂载目录。示例目录可改为自己 NAS 的路径。
 
-3. 从 [Releases](https://github.com/fredqin2006-X/bilidown-nas/releases) 下载 `bilidown-nas-2.1.1-nas.3.tar.gz`，放到项目目录后导入并启动：
+3. 从 [Releases](https://github.com/fredqin2006-X/bilidown-nas/releases) 下载 `bilidown-nas-2.1.1-nas.4.tar.gz`，放到项目目录后导入并启动：
 
    ```sh
-   docker load -i bilidown-nas-2.1.1-nas.3.tar.gz
+   docker load -i bilidown-nas-2.1.1-nas.4.tar.gz
    docker compose up -d --no-build
    docker compose ps
    ```
