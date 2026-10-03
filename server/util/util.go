@@ -20,7 +20,7 @@ func CheckBvidFormat(bvid string) bool {
 
 // GetDefaultDownloadFolder 获取默认下载路径
 func GetDefaultDownloadFolder() (string, error) {
-	return filepath.Abs("./download")
+	return filepath.Abs(DownloadRoot())
 }
 
 func IsNumber(str string) bool {

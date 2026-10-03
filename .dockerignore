@@ -1,0 +1,15 @@
+.git
+.vscode
+docs
+**/node_modules
+server/static
+**/*.db
+**/*.db-*
+**/*.exe
+**/download
+**/dist
+*.tar
+*.tar.gz
+*.zip
+.env
+nas-build.log

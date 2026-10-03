@@ -12,6 +12,7 @@ import (
 
 func API() *http.ServeMux {
 	router := http.NewServeMux()
+	router.HandleFunc("/getServerInfo", getServerInfo)
 	router.HandleFunc("/getVideoInfo", getVideoInfo)
 	router.HandleFunc("/getSeasonInfo", getSeasonInfo)
 	router.HandleFunc("/getQRInfo", getQRInfo)
@@ -55,6 +56,10 @@ func getRedirectedLocation(w http.ResponseWriter, r *http.Request) {
 }
 
 func quit(w http.ResponseWriter, r *http.Request) {
+	if util.ServerMode() {
+		http.Error(w, "Use Docker to stop the service", http.StatusForbidden)
+		return
+	}
 	util.Res{Success: true, Message: "退出成功"}.Write(w)
 	go func() {
 		os.Exit(0)
@@ -99,6 +104,10 @@ func saveFields(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if d[0] == "download_folder" {
+			if util.ServerMode() {
+				util.Res{Success: false, Message: "NAS 下载目录已固定，请通过 Docker 挂载配置修改"}.Write(w)
+				return
+			}
 			if _, err := os.Stat(d[1]); os.IsNotExist(err) {
 				if err := os.MkdirAll(d[1], os.ModePerm); err != nil {
 					util.Res{Success: false, Message: fmt.Sprintf("目录创建失败：%s", d[1])}.Write(w)

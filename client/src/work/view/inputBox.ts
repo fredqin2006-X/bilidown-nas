@@ -12,7 +12,7 @@ class InputBoxComp implements VanComponent {
     btnID = v4()
 
     constructor(public workRoute: WorkRoute) {
-        this.element = div(
+        this.element = div({ class: 'parse-panel' },
             div({ class: () => `hstack gap-3 align-items-stretch ${workRoute.urlInvalidClass.val}` },
                 div({ class: () => `form-floating flex-fill` },
                     input({

@@ -74,6 +74,18 @@ var GlobalTaskMux = &sync.Mutex{}
 var GlobalDownloadSem = util.NewSemaphore(3)
 var GlobalMergeSem = util.NewSemaphore(3)
 
+// Snapshot copies progress while holding the writer lock, so HTTP encoding
+// never races with a download or FFmpeg progress update.
+func Snapshot() []Task {
+	GlobalTaskMux.Lock()
+	defer GlobalTaskMux.Unlock()
+	items := make([]Task, len(GlobalTaskList))
+	for i, task := range GlobalTaskList {
+		items[i] = *task
+	}
+	return items
+}
+
 func (task *Task) Create(db *sql.DB) error {
 	util.SqliteLock.Lock()
 	result, err := db.Exec(`INSERT INTO "task" ("bvid", "cid", "format", "title", "owner", "cover", "status", "folder", "duration", "download_type")
@@ -246,7 +258,9 @@ func (task *Task) MergeMedia(outputPath string, inputPaths ...string) error {
 				return err
 			}
 			progress.current = outTime / 1000000
+			GlobalTaskMux.Lock()
 			task.MergeProgress = progress.percent()
+			GlobalTaskMux.Unlock()
 		}
 	}
 
@@ -257,7 +271,9 @@ func (task *Task) MergeMedia(outputPath string, inputPaths ...string) error {
 	if err := cmd.Wait(); err != nil {
 		return err
 	}
+	GlobalTaskMux.Lock()
 	task.MergeProgress = 1
+	GlobalTaskMux.Unlock()
 	return nil
 }
 
@@ -292,7 +308,7 @@ func (task *Task) UpdateStatus(db *sql.DB, status TaskStatus, errs ...error) err
 	_, err := db.Exec(`UPDATE "task" SET "status" = ? WHERE "id" = ?`, status, task.ID)
 	util.SqliteLock.Unlock()
 	if err != nil {
-		return nil
+		return err
 	}
 	for _, err := range errs {
 		if err != nil {
@@ -302,7 +318,9 @@ func (task *Task) UpdateStatus(db *sql.DB, status TaskStatus, errs ...error) err
 			}
 		}
 	}
+	GlobalTaskMux.Lock()
 	task.Status = status
+	GlobalTaskMux.Unlock()
 	return err
 }
 
@@ -318,6 +336,11 @@ func DownloadMedia(client *bilibili.BiliClient, _url string, task *Task, mediaTy
 
 	if err != nil {
 		return err
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("media download HTTP status %d", resp.StatusCode)
 	}
 
 	filename := strconv.FormatInt(task.ID, 10) + "." + mediaType
@@ -363,7 +386,10 @@ func (p *progressBar) add(n int) {
 }
 
 func (p *progressBar) percent() float64 {
-	return float64(p.current) / float64(p.total)
+	if p.total <= 0 {
+		return 0
+	}
+	return min(1, float64(p.current)/float64(p.total))
 }
 
 func newProgressBar(total int64) *progressBar {

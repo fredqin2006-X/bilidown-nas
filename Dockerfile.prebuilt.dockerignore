@@ -1,0 +1,11 @@
+.git
+client
+docs
+server/*
+!server/static
+**/*.db
+**/*.db-*
+.env
+*.tar
+*.tar.gz
+*.zip

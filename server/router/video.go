@@ -1,14 +1,12 @@
 package router
 
 import (
-	"fmt"
-	"net/http"
-	"path/filepath"
-	"strconv"
-	"strings"
 	"bilidown/bilibili"
 	"bilidown/util"
 	"bilidown/util/res_error"
+	"fmt"
+	"net/http"
+	"strconv"
 )
 
 // getVideoInfo 通过 BV 号获取视频信息
@@ -130,13 +128,6 @@ func getPopularVideos(w http.ResponseWriter, r *http.Request) {
 	}
 	util.Res{Success: true, Message: "获取成功", Data: bvidList}.Write(w)
 }
-
-var downloadVideo = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Query().Get("path")
-	safePath := filepath.Clean(path)
-	safePath = strings.ReplaceAll(safePath, "\\", "/")
-	http.ServeFile(w, r, safePath)
-})
 
 var getSeasonsArchivesListFirstBvid = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	var mid int

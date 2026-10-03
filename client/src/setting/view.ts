@@ -1,6 +1,7 @@
 import van from 'vanjs-core'
 import { SettingRoute } from '.'
 import { saveFields } from './data'
+import { SERVER_INFO } from '../mixin'
 
 const { a, button, div, input } = van.tags
 
@@ -13,11 +14,12 @@ export const SaveFolderSetting = (route: SettingRoute) => {
         div({ class: 'input-group-text' }, '下载目录'),
         input({
             class: 'form-control',
-            value: saveFolder,
+            value: () => SERVER_INFO.val.serverMode ? SERVER_INFO.val.downloadHostPath : saveFolder.val,
+            readOnly: () => SERVER_INFO.val.serverMode,
             oninput: event => saveFolder.val = event.target.value,
         }),
         button({
-            class: 'btn btn-success', onclick() {
+            class: 'btn btn-success', hidden: () => SERVER_INFO.val.serverMode, onclick() {
                 folderPickerDisabled.val = true
                 saveFields([
                     ['download_folder', saveFolder.val]

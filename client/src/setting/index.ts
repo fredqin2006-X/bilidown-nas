@@ -1,6 +1,6 @@
 import van from 'vanjs-core'
 import { Route, goto } from 'vanjs-router'
-import { checkLogin, GLOBAL_HAS_LOGIN, VanComponent } from '../mixin'
+import { checkLogin, GLOBAL_HAS_LOGIN, SERVER_INFO, VanComponent } from '../mixin'
 import { SaveFolderSetting } from './view'
 import { getFields } from './data'
 import { LoadingBox } from '../view'
@@ -29,13 +29,13 @@ export class SettingRoute implements VanComponent {
         return Route({
             rule: 'setting',
             Loader() {
-                return div(
+                return div({ class: 'settings-panel' },
                     () => _that.loading.val ? LoadingBox() : '',
                     () => _that.loading.val ? '' : div({ class: 'vstack gap-4' },
                         SaveFolderSetting(_that),
                         div({ class: 'hstack gap-3' },
                             button({
-                                class: 'btn btn-outline-secondary', onclick() {
+                                class: 'btn btn-outline-secondary', hidden: () => SERVER_INFO.val.serverMode, onclick() {
                                     if (!confirm('确定要关闭软件吗?')) return
                                     fetch('/api/quit').then(res => res.json()).then(res => {
                                         if (!res.success) alert(res.message)

@@ -13,11 +13,11 @@ export default () => {
     return Route({
         rule: 'login',
         Loader() {
-            return div(
-                div({ class: 'card card-body rounded-4' },
+            return div({ class: 'login-page' },
+                div({ class: 'card card-body rounded-4 login-card' },
                     div({ class: 'row' },
                         div({ class: 'col-xl-3 col-lg-4 col-md-5 col-sm-6' },
-                            div({ class: 'ratio ratio-1x1' },
+                            div({ class: 'ratio ratio-1x1 qr-frame' },
                                 img({
                                     src: qrSrc,
                                     class: 'w-100',
@@ -31,8 +31,8 @@ export default () => {
                         ),
                         div({ class: 'col-xl-9 col-lg-8 col-md-7 col-sm-6' },
                             div({ class: 'vstack gap-3 h-100 px-3 justify-content-center align-items-center align-items-sm-start pb-4 pb-sm-0' },
-                                div({ class: 'fs-1' }, '扫码登录'),
-                                div({ class: 'fs-4' }, '使用哔哩哔哩 APP 扫码登录'),
+                                div({ class: 'login-title' }, '扫码登录'),
+                                div({ class: 'login-description' }, '使用哔哩哔哩 APP 扫码登录'),
                                 div({ class: 'text-danger fw-bold', hidden: () => !errorMessage.val }, errorMessage),
                                 div({ class: 'text-primary fw-bold', hidden: errorMessage },
                                     () => qrStatusMessage.val.replace('未扫码', '').replace('二维码已扫码未确认', '已扫码，请点击确认')

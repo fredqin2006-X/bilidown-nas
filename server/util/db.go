@@ -88,6 +88,10 @@ func SaveFields(db *sql.DB, data [][2]string) error {
 
 // GetCurrentFolder 获取数据库中的下载保存路径，如果不存在则将默认路径保存到数据库
 func GetCurrentFolder(db *sql.DB) (string, error) {
+	if ServerMode() {
+		folder := DownloadRoot()
+		return folder, os.MkdirAll(folder, 0755)
+	}
 	var folder string
 	SqliteLock.Lock()
 	err := db.QueryRow(`SELECT "value" FROM "field" WHERE "name" = 'download_folder'`).Scan(&folder)
@@ -137,7 +141,7 @@ var SqliteLock sync.Mutex
 func MustGetDB(path ...string) *sql.DB {
 	pathStr := ""
 	if len(path) == 0 {
-		pathStr = "./data.db"
+		pathStr = DatabasePath()
 	} else if len(path) > 1 {
 		log.Fatalln(errors.New("len(path) <= 1"))
 	} else {

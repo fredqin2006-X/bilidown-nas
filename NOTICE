@@ -1,0 +1,15 @@
+BiliDown NAS
+
+Based on Bilidown by iuroc and its contributors:
+https://github.com/iuroc/bilidown
+Upstream baseline: 6b196f57473a36ccd7c77104e5aa01ca046b7836
+
+This repository retains the upstream Apache License 2.0 and Git history.
+NAS adaptation and UI changes: FredQin, 2026.
+Changes include a headless server entry point, configurable storage, restricted
+server-mode file access, Docker deployment, health checks, download robustness,
+regression tests, and a refreshed responsive web interface.
+
+The user-supplied background illustration and third-party content visible in
+screenshots remain the property of their respective rights holders. They are
+not covered by the Apache License 2.0 for this repository's code.

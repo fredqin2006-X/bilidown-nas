@@ -1,0 +1,36 @@
+services:
+  bilidown:
+    image: bilidown-nas:2.1.1-nas.3
+    build:
+      context: .
+      network: host
+      args:
+        DEBIAN_MIRROR: http://mirrors.tuna.tsinghua.edu.cn/debian
+        DEBIAN_SECURITY_MIRROR: http://mirrors.tuna.tsinghua.edu.cn/debian-security
+    container_name: bilidown
+    user: "${PUID:-1000}:${PGID:-10}"
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${LAN_IP:?Set LAN_IP in .env}:${WEB_PORT:-8098}:8098"
+    environment:
+      TZ: Asia/Shanghai
+      BILIDOWN_DOWNLOAD_HOST_PATH: ${DOWNLOAD_DIR:-/volume2/Download}
+    volumes:
+      - ${DATA_DIR:-/volume3/docker/BiliDown/data}:/data
+      - ${DOWNLOAD_DIR:-/volume2/Download}:/downloads
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 15s
+    mem_limit: 1g
+    cpus: 2
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

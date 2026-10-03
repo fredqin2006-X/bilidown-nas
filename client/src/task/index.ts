@@ -1,6 +1,6 @@
 import van, { State } from 'vanjs-core'
 import { Route, goto, now } from 'vanjs-router'
-import { checkLogin, GLOBAL_HAS_LOGIN, GLOBAL_HIDE_PAGE, ResJSON, VanComponent } from '../mixin'
+import { checkLogin, GLOBAL_HAS_LOGIN, GLOBAL_HIDE_PAGE, SERVER_INFO, ResJSON, VanComponent } from '../mixin'
 import { deleteTask, getActiveTask, getTaskList, showFile } from './data'
 import { TaskInDB, TaskStatus } from '../work/type'
 import { LoadingBox } from '../view'
@@ -42,7 +42,7 @@ export class TaskRoute implements VanComponent {
         return Route({
             rule: 'task',
             Loader() {
-                return div(
+                return div({ class: 'task-page' },
                     () => _that.loading.val ? LoadingBox() : '',
                     () => div({ class: 'list-group', hidden: _that.loading.val },
                         _that.taskList.val.map(task => {
@@ -56,9 +56,7 @@ export class TaskRoute implements VanComponent {
                                     class: 'vstack gap-2 py-2 px-3',
                                     style: `cursor: pointer;`,
                                     onclick() {
-                                        const src = `/api/downloadVideo?path=${encodeURIComponent(
-                                            `${task.folder}\\${filename}`
-                                        )}`
+                                        const src = `/api/downloadVideo?id=${task.id}`
                                         if (task.statusState.val != 'done') return
                                         _that.playerModalComp.open(src, task.title, task.downloadType === 'audio' ? 'audio' : 'video')
                                     }
@@ -83,7 +81,7 @@ export class TaskRoute implements VanComponent {
                                         () => {
                                             if (task.statusState.val == 'waiting') return '等待下载'
                                             if (task.statusState.val == 'error') return '下载失败'
-                                            if (task.statusState.val == 'done') return task.folder
+                                            if (task.statusState.val == 'done') return SERVER_INFO.val.serverMode ? SERVER_INFO.val.downloadHostPath : task.folder
                                             if (task.videoProgress.val == 0) {
                                                 return `正在下载音频 (${(task.audioProgress.val * 100).toFixed(2)}%)`
                                             } else if (task.mergeProgress.val == 0) {
@@ -123,8 +121,12 @@ export class TaskRoute implements VanComponent {
                                         || task.deleting.val  // 正在删除时，不应该显示删除按钮
                                 },
                                     div({
-                                        class: 'hover-btn', title: '打开文件位置',
+                                        class: 'hover-btn', title: () => SERVER_INFO.val.serverMode ? '查看 NAS 文件路径' : '打开文件位置',
                                         onclick() {
+                                            if (SERVER_INFO.val.serverMode) {
+                                                prompt('NAS 文件路径，可复制后在绿联文件管理中查找：', `${SERVER_INFO.val.downloadHostPath}/${filename}`)
+                                                return
+                                            }
                                             showFile(`${task.folder}\\${filename}`)
                                             task.opening.val = true
                                             setTimeout(() => {

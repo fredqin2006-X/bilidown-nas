@@ -42,7 +42,17 @@ export const showErrorPage = (message: string) => {
  * 用法注意：每个路由 `onFirst` 和 `onLoad` 只能其中一个使用该函数，否则会导致执行两次请求
  * 一般在 `onFirst` 中执行本方法，在 `onLoad` 中执行 `if (!GLOBAL_HAS_LOGIN.val) return goto('login')`
  */
+export type ServerInfo = { serverMode: boolean, downloadFolder: string, downloadHostPath: string }
+export const SERVER_INFO = van.state<ServerInfo>({ serverMode: false, downloadFolder: '', downloadHostPath: '' })
+let serverInfoRequest: Promise<void> | undefined
+export const loadServerInfo = () => serverInfoRequest ??= fetch('/api/getServerInfo')
+    .then(res => res.json()).then((res: ResJSON<ServerInfo>) => {
+        if (!res.success) throw new Error(res.message)
+        SERVER_INFO.val = res.data
+    }).catch(error => { serverInfoRequest = undefined; throw error })
+
 export const checkLogin = async (): Promise<boolean> => {
+    await loadServerInfo()
     if (GLOBAL_HAS_LOGIN.val) return GLOBAL_HIDE_PAGE.val = false, true
     const res = await fetch('/api/checkLogin').then(res => res.json()) as ResJSON
     GLOBAL_HAS_LOGIN.val = res.success

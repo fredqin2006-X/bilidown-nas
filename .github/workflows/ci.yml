@@ -1,0 +1,28 @@
+name: NAS build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - name: Test NAS adaptation
+        working-directory: server
+        run: go test -tags headless ./... -run 'TestHeadlessDatabaseStartup|TestResolveDownloadFile|TestServer|TestTaskDownload'
+      - name: Vet headless backend
+        working-directory: server
+        run: go vet -tags headless ./...
+      - name: Build complete Docker image from source
+        run: docker build -t bilidown-nas:ci .

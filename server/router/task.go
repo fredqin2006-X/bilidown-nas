@@ -72,7 +72,7 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func getActiveTask(w http.ResponseWriter, r *http.Request) {
-	util.Res{Success: true, Data: task.GlobalTaskList}.Write(w)
+	util.Res{Success: true, Data: task.Snapshot()}.Write(w)
 }
 
 func getTaskList(w http.ResponseWriter, r *http.Request) {
@@ -101,6 +101,10 @@ func getTaskList(w http.ResponseWriter, r *http.Request) {
 
 // showFile 调用 Explorer 查看文件位置
 func showFile(w http.ResponseWriter, r *http.Request) {
+	if util.ServerMode() {
+		http.Error(w, "Desktop file manager is unavailable", http.StatusForbidden)
+		return
+	}
 	if err := r.ParseForm(); err != nil {
 		util.Res{Success: false, Message: "参数错误"}.Write(w)
 		return
@@ -152,6 +156,19 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	filePath := _task.FilePath()
+	if util.ServerMode() {
+		if _, err := util.ResolveDownloadFile(filePath); err != nil {
+			if !os.IsNotExist(err) {
+				http.Error(w, "File is outside download directory", http.StatusForbidden)
+				return
+			}
+			// A missing file must still have a lexically valid task path.
+			if !util.WithinDownloadRoot(filePath) {
+				http.Error(w, "File is outside download directory", http.StatusForbidden)
+				return
+			}
+		}
+	}
 	err = os.Remove(filePath)
 	if err != nil && !os.IsNotExist(err) {
 		util.Res{Success: false, Message: fmt.Sprintf("文件删除失败 os.Remove: %v", err)}.Write(w)

@@ -8,3 +8,12 @@ download/
 build/
 .VSCodeCounter/
 .claude/
+.env
+.env.*
+!.env.example
+*.db-*
+*.tar
+*.tar.gz
+*.zip
+*.log
+data/

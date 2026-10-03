@@ -1,144 +1,74 @@
-# Bilidown
+# BiliDown NAS
 
-[![GitHub Release](https://img.shields.io/github/v/release/iuroc/bilidown)](https://github.com/iuroc/bilidown/releases)
+面向 NAS 的哔哩哔哩视频下载服务器。在浏览器中扫码登录、解析视频、提交任务，下载和合并由 NAS 后台完成。
 
-哔哩哔哩视频解析下载工具，支持 8K 视频、Hi-Res 音频、杜比视界下载、批量解析，可扫码登录，常驻托盘。
+基于 [iuroc/bilidown](https://github.com/iuroc/bilidown) 二次开发，保留上游 Git 历史与 Apache-2.0 许可证。这是独立维护的 NAS 适配项目，非上游官方发行版。
 
-## 支持解析的链接类型
+[下载镜像](https://github.com/fredqin2006-X/bilidown-nas/releases) · [部署文档](NAS部署说明.md) · [上游原始说明](docs/UPSTREAM_README.md)
 
--   【单个视频】https://www.bilibili.com/video/BV1LLDCYJEU3/
--   【番剧和影视剧】https://www.bilibili.com/bangumi/play/ss48831
--   【视频合集】https://space.bilibili.com/282565107/channel/collectiondetail?sid=1427135
--   【收藏夹】https://space.bilibili.com/1176277996/favlist?fid=1234122612
--   【UP 主空间地址】等待 3.x 版本支持
+![BiliDown NAS 界面预览](docs/ui-preview.jpg)
 
-## 使用说明
+## 功能
 
-1. 从 [Releases](https://github.com/iuroc/bilidown/releases) 下载适合您系统版本的安装包
-2. 非 Windows 系统，请先安装 [FFmpeg 工具](https://www.ffmpeg.org/)
-3. 将安装包解压后执行即可
+- 扫码登录，支持普通视频、番剧/影视、合集和收藏夹解析。
+- 保留上游清晰度、音频与批量下载能力；可用格式受 B 站账号权限和视频本身限制。
+- 后台下载和 FFmpeg 合并，关闭浏览器后任务继续执行。
+- 登录状态与任务记录持久化，下载文件直接保存在 NAS 挂载目录。
+- 任务列表支持浏览器播放、下载到电脑和复制 NAS 文件路径。
+- Docker 无桌面部署，普通用户运行、只读根文件系统和健康检查。
+- 插画背景、半透明面板、紫色主题，适配桌面和手机。
 
-## 第三方客户端
+已在绿联 DXP4800+（UGOS Pro，x86_64）验证。当前发行镜像为 **linux/amd64**，ARM NAS 尚未验证。
 
-感谢社区开发者对 Bilidown 的支持。
+## 快速部署
 
-- **bilidown-for-mac**（macOS 原生客户端）
-  - 项目地址：https://github.com/Qwehhh2233/bilidown-for-mac
-  - 基于 Bilidown 后端实现，由社区开发者维护，为 macOS 用户提供原生客户端体验
+需要 Docker 和 Docker Compose。以下步骤在 NAS 的 SSH 终端执行；按系统权限添加 `sudo`。
 
-## 软件特色
+1. 克隆项目，并复制配置模板：
 
-1. 前端采用 [Bootstrap](https://github.com/twbs/bootstrap) 和 [VanJS](https://github.com/vanjs-org/van) 构建，轻量美观
-2. 后端使用 Go 语言开发，数据库采用 SQlite，简化构建和部署过程
-3. 前端通过 [p-queue](https://github.com/sindresorhus/p-queue) 控制并发请求，加快批量解析速度
+   ```sh
+   git clone https://github.com/fredqin2006-X/bilidown-nas.git
+   cd bilidown-nas
+   cp .env.example .env
+   ```
 
-## 其他说明
+2. 编辑 `.env`：填写 NAS 的内网 IP、运行用户的 UID/GID、数据库目录和下载目录。使用 `id` 查询 UID/GID，并确保该用户可读写两个挂载目录。示例目录可改为自己 NAS 的路径。
 
--   本程序不支持也不建议 HTTP 代理，直接使用国内网络访问能提升批量解析的成功率和稳定性。
+3. 从 [Releases](https://github.com/fredqin2006-X/bilidown-nas/releases) 下载 `bilidown-nas-2.1.1-nas.3.tar.gz`，放到项目目录后导入并启动：
 
-## 打包可执行文件
+   ```sh
+   docker load -i bilidown-nas-2.1.1-nas.3.tar.gz
+   docker compose up -d --no-build
+   docker compose ps
+   ```
 
-```shell
-git clone https://github.com/iuroc/bilidown
-cd bilidown/client
-pnpm install
-pnpm build
-cd ../server
-go mod tidy
-CGO_ENABLED=1 go build
+4. 浏览器访问 `http://你的NAS内网IP:8098`，使用 B 站客户端扫码登录。
+
+也可以直接从完整源码构建，首次构建需要下载 Node/Go 和系统依赖：
+
+```sh
+docker compose build
+docker compose up -d
 ```
 
-## 交叉编译
+## 使用与维护
 
-### 说明
+下载目录固定为 `DOWNLOAD_DIR` 对应的 NAS 路径。网页设置页显示该路径；修改目录时编辑 `.env` 并重新创建容器。
 
--   镜像名称：`iuroc/cgo-cross-build`
--   支持的系统架构
-    -   `linux/amd64`
-    -   `windows/amd64`
-    -   `windows/386`
-    -   `windows/arm64`
-    -   `darwin/amd64`
-    -   `darwin/arm64`
+所有访问者共用一个 B 站登录和任务列表，网页没有独立管理密码。设计用途为可信内网访问，请保持内网 IP 绑定。
 
-### 拉取镜像和项目源码
+重启保留登录和历史记录；未完成任务会标记为失败，需要重新提交。当前没有断点续传。浏览器可播放的编码由设备和浏览器决定，其他格式可以通过 NAS 文件共享使用外部播放器观看。
 
-```shell
-docker pull iuroc/cgo-cross-build:latest
-git clone https://github.com/iuroc/bilidown
-```
+升级前停止下载并备份数据目录，具体见 [部署文档](NAS部署说明.md)。离线镜像不包含登录数据、数据库或下载视频。
 
-### 交叉编译发行版
+## 开发与背景替换
 
-> 执行 `goreleaser` 命令时将自动执行 `pnpm build` 和 `go mod tidy`
+前端使用 Vite、VanJS 和 Bootstrap；后端使用 Go、SQLite 和 FFmpeg。Dockerfile 包含完整构建步骤；`headless` 构建标签去除桌面托盘依赖。
 
-将 `ffmpeg.exe` 放入 `server/bin` 目录内。
+替换 `client/public/background.jpg` 后重新构建即可更换背景。插画及截图中第三方内容的权利归各自权利人所有，不纳入代码的 Apache-2.0 授权，详见 [NOTICE](NOTICE)。
 
-在项目根目录执行如下代码，进入 Docker 容器。
+针对 NAS 适配的测试与完整 Docker 构建由 GitHub Actions 检查。上游部分测试依赖实时 B 站 API 或本地媒体文件，详见部署文档中的测试命令。
 
-```shell
-docker run --rm -it -v .:/usr/src/data iuroc/cgo-cross-build
-```
+## 致谢与许可证
 
-在容器内的终端执行如下代码，开始交叉编译。
-
-```shell
-cd server
-git tag v2.1.1
-goreleaser release --snapshot --clean
-# 正式发行
-# GITHUB_TOKEN=xxx goreleaser release --clean
-```
-
-### 编译指定系统架构
-
-```ini
-# 按上面的步骤进入 Docker 容器内终端
-
-# [darwin-amd64]
-GOOS=darwin
-GOARCH=amd64
-CC=o64-clang
-CGO_ENABLED=1
-go build
-```
-
-### 非 Docker 环境编译
-
-在 Linux amd64 平台上执行 `go build` 时，您可能需要安装以下依赖包：  
-
-```bash
-sudo apt install pkg-config gcc libayatana-appindicator3-dev
-```
-
-## 开发环境
-
-```bash
-# client
-pnpm install
-pnpm dev
-# server
-go build && ./bilidown
-```
-
-## 特别感谢
-
--   [twbs/bootstrap](https://github.com/twbs/bootstrap) - 前端开发必备的响应式框架，简化页面布局
--   [vanjs-org/van](https://github.com/vanjs-org/van) - 轻量级的前端框架，专注于构建高效应用
--   [vitejs/vite](https://github.com/vitejs/vite) - 快速的前端构建工具，基于 ES 模块开发
--   [SocialSisterYi/bilibili-API-collec](https://github.com/SocialSisterYi/bilibili-API-collect) - B 站 API 集合，支持多种操作接口
--   [sindresorhus/p-queue](https://github.com/sindresorhus/p-queue) - 支持并发限制的 JavaScript 队列处理库
--   [iuroc/vanjs-router](https://github.com/iuroc/vanjs-router) - 轻量级前端路由工具，适用于 Van.js 框架
--   [uuidjs/uuid](https://www.npmjs.com/package/uuid) - 用于生成唯一标识符（UUID）的 JavaScript 库
--   [getlantern/systray](https://github.com/getlantern/systray) - 简单的跨平台系统托盘图标库，支持图标管理
--   [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) - Go 语言的 SQLite3 数据库驱动，轻量高效
--   [skip2/go-qrcode](https://github.com/skip2/go-qrcode) - 生成 QR 码的 Go 语言库，简单易用
-
-## 软件界面
-
-![](./docs/2024-11-05_090604.png)
-
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=iuroc/bilidown&type=Date)](https://www.star-history.com/#iuroc/bilidown&Date)
+感谢 [iuroc/bilidown](https://github.com/iuroc/bilidown) 及其贡献者。NAS 适配基于提交 `6b196f57473a36ccd7c77104e5aa01ca046b7836`，修改摘要见 [NOTICE](NOTICE)。代码遵循 [Apache License 2.0](LICENSE)。
